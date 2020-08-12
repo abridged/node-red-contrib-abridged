@@ -1,9 +1,5 @@
-# Abridged-Reddit-Bot
+# Abirdged Node-Red Nodes 
 
 ## Installation
 
-1. Clone/download repo
-2. `npm install`
-
-## Usage
-`npm start`
+1. `npm install`
