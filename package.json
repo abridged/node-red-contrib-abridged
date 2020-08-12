@@ -1,0 +1,25 @@
+{
+  "name": "node-red-contrib-abridged",
+  "version": "1.0.2",
+  "description": "",
+  "main": "./examples/index.js",
+  "scripts": {
+    "start": "node ./examples/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "node-red": {
+    "nodes": {
+      "abridged-sdk": "./nodes/abridged-sdk.js"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "abridged": "^2.0.0-beta.16",
+    "dotenv": "^8.2.0",
+    "eth-sdk": "^0.2.10",
+    "node-fetch": "^2.6.0",
+    "ws": "^7.3.1"
+  }
+}
