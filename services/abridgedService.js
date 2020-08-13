@@ -24,8 +24,11 @@ class AbridgedService {
   async init() {
     console.log('AbridgedService: init with kchannel');
     const account = await this.sdk.createAccount();
+    console.log('AbridgedService: Account ', account);
     const kChannelAuth = await this.sdk.kChannelsAuthenticate();
+    console.log('AbridgedService: kChannelAuth ', kChannelAuth);
     const kChannel = await this.sdk.kChannelsCreate();
+    console.log('AbridgedService: kChannel ', kChannel);
     const privateKey = await this.sdk.exportPrivateKey();
     console.log('AbridgedService: init done with kchannel');
     return {
