@@ -2,6 +2,7 @@
 const constants = require('../utils/constants');
 const BlockchainUtils = require('../utils/blockchainUtils');
 const AbridgedService = require('../services/abridgedService');
+const { toHex, toNumber, toWei, toBN, Units, toEth } = require('eth-sdk');
 
 module.exports = function (RED) {
   function AbridgedSdkNode(config) {
@@ -19,37 +20,58 @@ async function input(RED, node, data, config) {
   try {
     node.status({ fill: "green", shape: "dot", text: "Initializing..." });
     const { network, queryProviderEndpoint, privateKey, action } = data.payload
-    if (network === undefined || queryProviderEndpoint === undefined || privateKey === undefined) {
-      throw `Missing required params network: ${network} queryProviderEndpoint: ${queryProviderEndpoint} privateKey: ${privateKey}`
+    if (network === undefined || queryProviderEndpoint === undefined) {
+      throw `Missing required params network: ${network} queryProviderEndpoint: ${queryProviderEndpoint}`
     }
-    this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
     switch (action) {
       case "init_with_kchannel":
-        node.status({ fill: "green", shape: "dot", text: "connected..." });
+        this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
         result = await this.abridgedService.init();
-        data.payload.account = result;
+        data.payload.sdk = result;
         this.abridgedService.resetSdk();
         // await _sendTip(recipient, 0.5)
-        node.status({});
         break;
       case "tip":
-        // call abridged service sendKChannelsTransaction
+        if (!privateKey) {
+          throw 'Missing privateKey'
+        }
+        if (data.payload.tokenSymbol !== 'eth') {
+          throw 'Only ETH tipping is supported.'
+        }
+        this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
         await this.abridgedService.init();
         node.status({ fill: "green", shape: "dot", text: "Sending Tip..." });
-        const { recipient, amount } = data.payload;
-        result = await _sendTip(recipient, amount);
+        result = await _sendTip(data.payload.recipient, data.payload.amount);
         data.payload.result = result;
         this.abridgedService.resetSdk();
-        node.status({});
         break;
-      case "connect":
-        const account = await this.abridgedService.connect();
-        node.status({ fill: "green", shape: "dot", text: "connected..." });
-        data.payload.account = account;
-        this.abridgedService.resetSdk();
-        node.status({});
+      case "kChannelsDeposit":
+        if (!privateKey) {
+          throw 'Missing privateKey'
+        }
+        this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
+        await this.abridgedService.init();
+        node.status({ fill: "green", shape: "dot", text: "Sending Deposit To kChanne..." });
+        const { amount, token } = data.payload;
+        if (token !== constants.TOKENS.ETH || !data.payload.amount) {
+          // only supports eth
+          throw `Unsupported token ${token} or Amount ${amount}`
+        } else {
+          const inWei = toWei(amount.toString())
+          result = await this.abridgedService.sendKChannelsDeposit(null, inWei.toString());
+          data.payload.result = result;
+          this.abridgedService.resetSdk();
+        }
         break;
+      // case "getBalance":
+      //   await this.abridgedService.init();
+      //   node.status({ fill: "green", shape: "dot", text: "Getting Balance..." });
+      //   result = await this.abridgedService.getBalance();
+      //   data.payload.result = result;
+      //   this.abridgedService.resetSdk();
+      //   break;
     }
+    node.status({});
     return node.send([data, null]);
   } catch (error) {
     node.status({});
@@ -66,7 +88,8 @@ async function _sendTip(recipient, tipAmount) {
   if (!tipAmount) {
     throw 'Invalid tip amount';
   }
-  const amount = BlockchainUtils.toBN(tipAmount, 1);
+  const inWei = toWei(tipAmount);
+  const amount = inWei.toString();
   await this.abridgedService.resolveTransaction(recipient.accountAddress, amount,);// toChecksumAddress(process.env.ABRIDGED_MOON_CONTRACT_ADDRESS));
   return true;
 }

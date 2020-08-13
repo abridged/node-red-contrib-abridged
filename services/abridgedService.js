@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const WebSocket = require('ws');
 const constants = require('../utils/constants');
-const { toBN } = require('eth-sdk');
+const { toBN, toWei } = require('eth-sdk');
 
 const { createRinkebySdk, NotificationTypes } = require('abridged');
 
@@ -26,18 +26,20 @@ class AbridgedService {
     const account = await this.sdk.createAccount();
     const kChannelAuth = await this.sdk.kChannelsAuthenticate();
     const kChannel = await this.sdk.kChannelsCreate();
+    const privateKey = await this.sdk.exportPrivateKey();
     console.log('AbridgedService: init done with kchannel');
     return {
       account,
       kChannelAuth,
-      kChannel
+      kChannel,
+      privateKey
     }
   }
 
-  async connect() {
-    const result = await this.sdk.createAccount();
-    return result;
-  }
+  // async connect() {
+  //   const result = await this.sdk.createAccount();
+  //   return result;
+  // }
 
   async resetSdk() {
     await this.sdk.resetAccount();
@@ -66,7 +68,27 @@ class AbridgedService {
       data: '0x',
     };
 
-    return this.sdk.kChannelsDeposit(options);
+    const result = await this.sdk.kChannelsDeposit(options);
+    return result;
+    // return result;
+    // return new Promise((resolve, reject) => {
+    //   const subscription = this.sdk.state$.notification$.subscribe(
+    //     (notification) => {
+    //       if (notification === null) {
+    //         return;
+    //       }
+    //       if (
+    //         notification.type === NotificationTypes.KChannelsTransaction
+
+    //         && notification.payload.transaction_status === 'Completed'
+    //       ) {
+    //         resolve(true);
+    //         // subscription.unsubscribe();
+    //       }
+    //     },
+    //   );
+    // });
+
   }
 
   async resolveTransaction(recipient, value, tokenAddress = null) {
@@ -91,6 +113,14 @@ class AbridgedService {
       );
     });
   }
-}
 
+  async getBalance(address, token) {
+    const options = {
+      address,
+      token // optional
+    };
+    const balance = await this.sdk.getBalance(options);
+    return balance;
+  }
+}
 module.exports = AbridgedService;

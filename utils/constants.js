@@ -5,8 +5,8 @@ const constants = {
     KOVAN: 'kovan',
     XDAI: 'xdai'
   },
-  PUBLICATION_TYPES: {
-    COMMENT: 'comment',
+  TOKENS: {
+    ETH: 'eth',
     POST: 'post',
   }
 };
