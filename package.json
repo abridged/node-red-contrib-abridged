@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-abridged",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "",
   "main": "./examples/index.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "abridged": "^2.0.0-beta.16",
     "dotenv": "^8.2.0",
     "eth-sdk": "^0.2.10",
+    "ethers": "^5.0.8",
     "node-fetch": "^2.6.0",
     "ws": "^7.3.1"
   }

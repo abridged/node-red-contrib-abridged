@@ -61,11 +61,11 @@ class AbridgedService {
     return this.sdk.kChannelsTransact(options);
   }
 
-  async sendKChannelsDeposit(recipient, value, tokenAddress = null) {
+  async sendKChannelsDeposit(recipient, value, data) {
     const options = {
       recipient, // if not set, will send to KChannels Contract
       value: toBN(value),
-      data: '0x',
+      data,
     };
 
     const result = await this.sdk.kChannelsDeposit(options);

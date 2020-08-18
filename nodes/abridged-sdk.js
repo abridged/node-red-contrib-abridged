@@ -3,6 +3,7 @@ const constants = require('../utils/constants');
 const BlockchainUtils = require('../utils/blockchainUtils');
 const AbridgedService = require('../services/abridgedService');
 const { toHex, toNumber, toWei, toBN, Units, toEth } = require('eth-sdk');
+const { ethers } = require('ethers');
 
 module.exports = function (RED) {
   function AbridgedSdkNode(config) {
@@ -29,37 +30,62 @@ async function input(RED, node, data, config) {
         result = await this.abridgedService.init();
         data.payload.sdk = result;
         this.abridgedService.resetSdk();
-        // await _sendTip(recipient, 0.5)
         break;
       case "tip":
         if (!privateKey) {
           throw 'Missing privateKey'
         }
-        if (data.payload.tokenSymbol !== 'eth') {
-          throw 'Only ETH tipping is supported.'
-        }
+        // also add for isValid eth address
+        // if (data.payload.token) {
         this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
         await this.abridgedService.init();
         node.status({ fill: "green", shape: "dot", text: "Sending Tip..." });
-        result = await _sendTip(data.payload.recipient, data.payload.amount);
+        let tokenAddress = data.payload.token;
+        if (!data.payload.token || data.payload.token.toLowerCase() === 'eth') {
+          tokenAddress = null;
+        }
+        const ethBalance = await this.abridgedService.getBalance(null, null);
+        data.payload.sender = {
+          'ethBalance': ethBalance.toString(),
+        }
+        if (tokenAddress) {
+          const tokenBalance = await this.abridgedService.getBalance(null, tokenAddress);
+          data.payload.sender.tokenAddress = tokenAddress;
+          data.payload.sender.tokenBalance = tokenBalance.toString();
+        }
+        result = await _sendTip(data.payload.recipient, data.payload.amount, tokenAddress);
         data.payload.result = result;
         this.abridgedService.resetSdk();
+        // } else {
+        //   throw 'Missing token as (eth) or address'
+        // }
+
         break;
       case "kChannelsDeposit":
         if (!privateKey) {
           throw 'Missing privateKey'
         }
-        this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
-        await this.abridgedService.init();
-        node.status({ fill: "green", shape: "dot", text: "Sending Deposit To kChanne..." });
         const { amount, token } = data.payload;
-        if (token !== constants.TOKENS.ETH || !data.payload.amount) {
+        if (!data.payload.amount) {
           // only supports eth
-          throw `Unsupported token ${token} or Amount ${amount}`
+          throw `Amount is not specified ${amount}`
         } else {
-          const inWei = toWei(amount.toString())
-          result = await this.abridgedService.sendKChannelsDeposit(null, inWei.toString());
-          data.payload.result = result;
+          this.abridgedService = new AbridgedService(network, queryProviderEndpoint, privateKey);
+          await this.abridgedService.init();
+          node.status({ fill: "green", shape: "dot", text: "Sending Deposit To kChanne..." });
+          if (token === 'eth') {
+            // deposit eth
+            console.log('kChannelsDeposit ETH');
+            const inWei = toWei(amount.toString())
+            result = await this.abridgedService.sendKChannelsDeposit(null, inWei.toString());
+            data.payload.result = result;
+          } else {
+            console.log('kChannelsDeposit', token);
+            // deposit token
+            const kChannelVerifyingContract = '0x6cd7e721D9D13707D3D447235A30DACFDe2e9fe5'
+            result = await _depositTokenInkChannel(this.abridgedService, token, kChannelVerifyingContract, amount);
+            data.payload.result = result;
+          }
           this.abridgedService.resetSdk();
         }
         break;
@@ -81,7 +107,28 @@ async function input(RED, node, data, config) {
   }
 }
 
-async function _sendTip(recipient, tipAmount) {
+async function _depositTokenInkChannel(abridgedService, tokenAddress, kChannelVerifyingContract, amount) {
+  // chck if have enough tokens to deposit into kchannel
+
+  const tokenBalance = await abridgedService.getBalance(null, tokenAddress);
+  if (tokenBalance.lt(toWei(amount.toString()))) {
+    throw `Insufficient token balance. Balance ${tokenBalance}, trying todeposit ${toWei(amount.toString())} `;
+  }
+
+  // kChannel rinkeby verifying contract
+  const args = [kChannelVerifyingContract, toWei(amount.toString()).toString()];
+  const abi = [
+    "function transfer(address to, uint value)"
+  ];
+  let iface = new ethers.utils.Interface(abi);
+  const data = iface.encodeFunctionData("transfer", args);
+  console.log(data);
+  // token deposit
+  result = await abridgedService.sendKChannelsDeposit(tokenAddress, toBN('0x0'), data);
+  return result;
+}
+
+async function _sendTip(recipient, tipAmount, tokenAddress = null) {
   if (!recipient || !recipient.accountAddress || !recipient.channelUUID) {
     throw 'Invalid recipient argument';
   }
@@ -90,6 +137,6 @@ async function _sendTip(recipient, tipAmount) {
   }
   const inWei = toWei(tipAmount);
   const amount = inWei.toString();
-  await this.abridgedService.resolveTransaction(recipient.accountAddress, amount,);// toChecksumAddress(process.env.ABRIDGED_MOON_CONTRACT_ADDRESS));
+  await this.abridgedService.resolveTransaction(recipient.accountAddress, amount, tokenAddress);// toChecksumAddress(process.env.ABRIDGED_MOON_CONTRACT_ADDRESS));
   return true;
 }
