@@ -1,25 +1,26 @@
 <script type="text/javascript">
-    RED.nodes.registerType('abridged-sdk', {
+    RED.nodes.registerType('discord-role-manager', {
         category: 'Abridged',
-        color: '#ffa64d',
+        color: '#a6bbcf',
         defaults: {
             name: { value: "" }
         },
         inputs: 1,
-        outputs: 2,
+        outputs: 1,
+        icon: "file.png",
         label: function () {
-            return this.name || "Abridged SDK";
+            return this.name || "discord-role-manager";
         }
     });
 </script>
 
-<script type="text/html" data-template-name="abridged-sdk">
+<script type="text/html" data-template-name="discord-role-manager">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 
-<script type="text/html" data-help-name="abridged-sdk">
-    <p>A simple node that to start wrapping abridged sdk</p>
+<script type="text/html" data-help-name="discord-role-manager">
+    <p>A simple node that manages discord roles</p>
 </script>

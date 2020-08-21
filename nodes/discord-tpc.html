@@ -1,5 +1,5 @@
 <script type="text/javascript">
-    RED.nodes.registerType('abridged-sdk', {
+    RED.nodes.registerType('discord-tpc', {
         category: 'Abridged',
         color: '#ffa64d',
         defaults: {
@@ -8,18 +8,18 @@
         inputs: 1,
         outputs: 2,
         label: function () {
-            return this.name || "Abridged SDK";
+            return this.name || "Discord TPC";
         }
     });
 </script>
 
-<script type="text/html" data-template-name="abridged-sdk">
+<script type="text/html" data-template-name="discord-tpc">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 
-<script type="text/html" data-help-name="abridged-sdk">
-    <p>A simple node that to start wrapping abridged sdk</p>
+<script type="text/html" data-help-name="discord-tpc">
+    <p>A simple node that to start wrapping discord token permission chat</p>
 </script>

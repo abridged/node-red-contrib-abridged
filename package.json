@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "abridged": "^2.0.0-beta.16",
+    "discord.js": "^12.3.1",
     "dotenv": "^8.2.0",
     "eth-sdk": "^0.2.10",
     "ethers": "^5.0.8",
