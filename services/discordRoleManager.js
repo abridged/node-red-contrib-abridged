@@ -47,17 +47,19 @@ class DiscordRoleManager {
             for (const temp of guild.members.cache) {
                 let member = temp[1]
                 if (!member.user.bot && group.fields.config !== undefined) {
-                    // const hasRole = member.roles.cache.findKey(role => role.name === group.fields.config.membership.roles[0].roleName);
-                    // if (hasRole) {
-                    //     let resp = {
-                    //         role: hasRole,
-                    //         group,
-                    //         users: this.users,
-                    //         member: JSON.parse(JSON.stringify(member))
-                    //     }
-                    //     //node.send(resp, false);
-                    //     console.log('resp', resp);
-                    // }
+                    const hasRole = member.roles.cache.findKey(role => role.name === group.fields.config.membership.roles[0].roleName);
+
+
+                    if (hasRole) {
+                        let resp = {
+                            role: hasRole,
+                            group,
+                            users: this.users,
+                            member: JSON.parse(JSON.stringify(member))
+                        }
+                        //node.send(resp, false);
+                        console.log('resp', resp);
+                    }
 
                     // now lets pass group and user to next node that will add or remove role based on tokens
                 }
